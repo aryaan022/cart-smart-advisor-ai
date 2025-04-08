@@ -23,9 +23,10 @@ This project is built with:
 - React
 - Tailwind CSS
 
+The chatbot can:
 
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Describe the taste and flavor profiles of specific foods
+Suggest recipes based on what's in the user's cart
+Highlight current deals and discounts
+Provide personalized food recommendations for different meals
+Respond to health and nutrition questions
