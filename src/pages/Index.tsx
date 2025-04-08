@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { mockProducts } from "@/data/mockProducts";
 import { generateRecommendations } from "@/data/mockRecommendations";
@@ -9,7 +8,7 @@ import { ShoppingCart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import ProductCard from "@/components/ProductCard";
-import CartItem as CartItemComponent from "@/components/CartItem";
+import { default as CartItemComponent } from "@/components/CartItem";
 import RecommendationCard from "@/components/RecommendationCard";
 import SearchBar from "@/components/SearchBar";
 import CartStats from "@/components/CartStats";
@@ -24,14 +23,12 @@ const Index: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [potentialSavings, setPotentialSavings] = useState<number>(0);
 
-  // Update recommendations when cart changes
   useEffect(() => {
     if (cartItems.length > 0) {
       const cartItemsForRecommendations = cartItems.map(item => ({ id: item.id, quantity: item.quantity }));
       const newRecommendations = generateRecommendations(cartItemsForRecommendations);
       setRecommendations(newRecommendations);
       
-      // Calculate potential savings
       const totalPotentialSavings = newRecommendations.reduce(
         (sum, rec) => sum + rec.savings, 
         0
@@ -43,21 +40,17 @@ const Index: React.FC = () => {
     }
   }, [cartItems]);
 
-  // Handle adding products to cart
   const handleAddToCart = (product: Product) => {
     setCartItems(prevItems => {
-      // Check if item is already in cart
       const existingItem = prevItems.find(item => item.id === product.id);
       
       if (existingItem) {
-        // Increment quantity if already in cart
         return prevItems.map(item => 
           item.id === product.id 
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
       } else {
-        // Add new item with quantity 1
         toast({
           title: "Added to cart",
           description: `${product.name} has been added to your cart.`,
@@ -67,7 +60,6 @@ const Index: React.FC = () => {
     });
   };
 
-  // Handle updating cart item quantity
   const handleUpdateQuantity = (id: string, quantity: number) => {
     setCartItems(prevItems => 
       prevItems.map(item => 
@@ -78,7 +70,6 @@ const Index: React.FC = () => {
     );
   };
 
-  // Handle removing items from cart
   const handleRemoveItem = (id: string) => {
     setCartItems(prevItems => {
       const itemToRemove = prevItems.find(item => item.id === id);
@@ -92,19 +83,15 @@ const Index: React.FC = () => {
     });
   };
 
-  // Handle adding recommended items to cart
   const handleAddRecommendedItems = (itemIds: string[]) => {
-    // Find the recommendation that contains these items
     const recommendation = recommendations.find(rec => 
       rec.items.some(item => itemIds.includes(item.id))
     );
     
     if (recommendation) {
-      // Add all items from this recommendation to cart
       const newItems: CartItem[] = [];
       
       recommendation.items.forEach((recItem: CartItem) => {
-        // Check if the item is already in cart
         const existingItem = cartItems.find(item => item.id === recItem.id);
         
         if (!existingItem) {
@@ -122,12 +109,10 @@ const Index: React.FC = () => {
     }
   };
 
-  // Handle search results
   const handleSearch = (results: Product[]) => {
     setSearchResults(results);
   };
 
-  // Handle filtering
   const handleFilterChange = (filter: string | null) => {
     setActiveFilter(filter);
     
@@ -143,7 +128,6 @@ const Index: React.FC = () => {
     }
   };
 
-  // Filter products that are displayed
   const displayedProducts = activeFilter
     ? searchResults.filter(
         product => 
@@ -175,7 +159,6 @@ const Index: React.FC = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <ProductFilters
@@ -193,7 +176,6 @@ const Index: React.FC = () => {
             )}
           </div>
           
-          {/* Main content */}
           <div className="lg:col-span-6 space-y-6">
             {displayedProducts.length === 0 ? (
               <div className="text-center py-12">
@@ -223,7 +205,6 @@ const Index: React.FC = () => {
             )}
           </div>
           
-          {/* Cart / Recommendations */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="bg-primary/10 p-4">
