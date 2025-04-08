@@ -23,7 +23,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isInCart, onAddToCar
         <img 
           src={product.image} 
           alt={product.name} 
-          className="h-full w-full object-cover" 
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
         {discountPercent > 0 && (
           <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">

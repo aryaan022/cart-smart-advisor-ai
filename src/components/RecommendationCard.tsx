@@ -44,6 +44,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation,
                   src={item.image}
                   alt={item.name}
                   className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
                 />
               </div>
               <div className="flex-1">
