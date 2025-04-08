@@ -13,6 +13,7 @@ import RecommendationCard from "@/components/RecommendationCard";
 import SearchBar from "@/components/SearchBar";
 import CartStats from "@/components/CartStats";
 import ProductFilters from "@/components/ProductFilters";
+import ChatBot from "@/components/ChatBot";
 
 const Index: React.FC = () => {
   const { toast } = useToast();
@@ -263,6 +264,8 @@ const Index: React.FC = () => {
           </div>
         </div>
       </main>
+      
+      <ChatBot cartItems={cartItems} />
     </div>
   );
 };

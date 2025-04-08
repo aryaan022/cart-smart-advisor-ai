@@ -23,3 +23,10 @@ export interface Recommendation {
   savings: number;
   items: CartItem[];
 }
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+}
