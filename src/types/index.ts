@@ -10,6 +10,7 @@ export interface Product {
   category: string;
   rating: number;
   inStock: boolean;
+  currency?: string;
 }
 
 export interface CartItem extends Product {

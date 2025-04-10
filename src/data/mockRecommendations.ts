@@ -27,7 +27,7 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
       id: "rec1",
       title: "Add milk to your breakfast essentials",
       description: "Adding milk to your eggs could save you on combined shipping from Farm Direct.",
-      savings: 2.10,
+      savings: 150,
       items: [createCartItem("3")]
     });
   }
@@ -40,20 +40,21 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
       id: "rec2",
       title: "Complete your pasta dinner",
       description: "Grocery Plus has a bundle deal on pasta with sauce.",
-      savings: 1.50,
+      savings: 100,
       items: [
         {
           id: "13",
           name: "Whole Grain Pasta",
-          price: 1.99,
-          originalPrice: 2.49,
+          price: 149,
+          originalPrice: 199,
           image: "/placeholder.svg",
-          description: "Organic whole grain pasta, 16oz",
+          description: "Organic whole grain pasta, 500g",
           store: "Grocery Plus",
           category: "Pantry",
           rating: 4.4,
           inStock: true,
-          quantity: 1
+          quantity: 1,
+          currency: "₹"
         }
       ]
     });
@@ -68,33 +69,35 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
       id: "rec3",
       title: "Fruit bundle offer",
       description: "Freshmart has a special discount when you buy 3+ fruit items.",
-      savings: 3.50,
+      savings: 250,
       items: [
         {
           id: "14",
           name: "Banana Bunch",
-          price: 1.99,
-          originalPrice: 2.49,
+          price: 149,
+          originalPrice: 199,
           image: "/placeholder.svg",
           description: "Organic banana bunch",
           store: "Freshmart",
           category: "Produce",
           rating: 4.3,
           inStock: true,
-          quantity: 1
+          quantity: 1,
+          currency: "₹"
         },
         {
           id: "15",
           name: "Blueberries",
-          price: 3.99,
-          originalPrice: 4.99,
+          price: 299,
+          originalPrice: 349,
           image: "/placeholder.svg",
-          description: "Organic blueberries, 6oz container",
+          description: "Organic blueberries, 125g container",
           store: "Freshmart",
           category: "Produce",
           rating: 4.7,
           inStock: true,
-          quantity: 1
+          quantity: 1,
+          currency: "₹"
         }
       ]
     });
@@ -105,7 +108,7 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
     id: "rec4",
     title: "Better together offer",
     description: "Health Foods is running a promotion on these items when purchased together.",
-    savings: 4.20,
+    savings: 320,
     items: [
       createCartItem("6"),
       createCartItem("9")

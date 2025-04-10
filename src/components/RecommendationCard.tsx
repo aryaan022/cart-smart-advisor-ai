@@ -31,7 +31,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation,
             </CardDescription>
           </div>
           <Badge className="bg-accent text-accent-foreground animate-pulse-scale" variant="secondary">
-            Save ${recommendation.savings.toFixed(2)}
+            Save ₹{recommendation.savings}
           </Badge>
         </div>
       </CardHeader>
@@ -52,10 +52,10 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommendation,
               <div className="flex-1">
                 <h4 className="text-sm font-medium">{item.name}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm">${item.price.toFixed(2)}</span>
+                  <span className="text-sm">{item.currency || "₹"}{item.price}</span>
                   {item.originalPrice && (
                     <span className="text-xs text-muted-foreground line-through">
-                      ${item.originalPrice.toFixed(2)}
+                      {item.currency || "₹"}{item.originalPrice}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">• {item.store}</span>

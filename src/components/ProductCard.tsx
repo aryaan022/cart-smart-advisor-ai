@@ -16,6 +16,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isInCart, onAddToCar
   const discountPercent = product.originalPrice 
     ? Math.round((1 - product.price / product.originalPrice) * 100) 
     : 0;
+  
+  const currencySymbol = product.currency || "₹";
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
@@ -44,10 +46,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isInCart, onAddToCar
         </div>
         
         <div className="mb-3 flex items-baseline gap-2">
-          <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+          <span className="text-lg font-bold">{currencySymbol}{product.price}</span>
           {product.originalPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              ${product.originalPrice.toFixed(2)}
+              {currencySymbol}{product.originalPrice}
             </span>
           )}
         </div>

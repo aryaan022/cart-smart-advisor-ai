@@ -23,6 +23,8 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
     onUpdateQuantity(item.id, item.quantity + 1);
   };
 
+  const currencySymbol = item.currency || "₹";
+
   return (
     <div className="flex items-center py-3 border-b last:border-0">
       <div className="h-16 w-16 bg-muted mr-3 rounded-md overflow-hidden">
@@ -39,10 +41,10 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
       <div className="flex-1">
         <h4 className="font-medium text-sm">{item.name}</h4>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-sm font-medium">${item.price.toFixed(2)}</span>
+          <span className="text-sm font-medium">{currencySymbol}{item.price}</span>
           {item.originalPrice && (
             <span className="text-xs text-muted-foreground line-through">
-              ${item.originalPrice.toFixed(2)}
+              {currencySymbol}{item.originalPrice}
             </span>
           )}
         </div>
