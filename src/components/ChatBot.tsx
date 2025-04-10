@@ -3,9 +3,8 @@ import { Bot, MessageCircle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { ChatMessage } from "@/types";
+import { ChatMessage, CartItem, ChatApiResponse } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { CartItem } from "@/types";
 
 interface ChatBotProps {
   cartItems: CartItem[];
@@ -38,6 +37,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [apiUrl, setApiUrl] = useState<string>("");
 
   const foodKnowledge: ContextualKnowledge = {
     "apple": {
@@ -138,6 +138,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    setApiUrl("https://api.openai.com/v1/chat/completions");
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -150,6 +154,34 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       }
     }
     return null;
+  };
+
+  const fetchChatbotResponse = async (userMessage: string): Promise<ChatApiResponse> => {
+    try {
+      const payload = {
+        message: userMessage,
+        cartItems: cartItems,
+      };
+
+      console.log("Sending request to chatbot API:", payload);
+
+      throw new Error("API call simulated failure for demo purposes");
+
+    } catch (error) {
+      console.log("Error fetching chatbot response from API:", error);
+      console.log("Falling back to local processing...");
+      
+      const localResponse = generateBotResponse(userMessage);
+      
+      return {
+        message: localResponse,
+        suggestions: [
+          "Tell me about seasonal produce",
+          "What deals are available?",
+          "Recommend a healthy breakfast"
+        ]
+      };
+    }
   };
 
   const generateBotResponse = (userMessage: string): string => {
@@ -255,7 +287,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!message.trim()) return;
@@ -272,10 +304,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     
     setIsTyping(true);
     
-    setTimeout(() => {
+    try {
+      const chatResponse = await fetchChatbotResponse(userMessage.content);
+      
       const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: generateBotResponse(userMessage.content),
+        content: chatResponse.message,
         isUser: false,
         timestamp: new Date(),
       };
@@ -283,26 +317,37 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       setIsTyping(false);
       setMessages(prev => [...prev, botResponse]);
       
-      setTimeout(() => {
-        if (Math.random() > 0.5) {
-          const suggestedFollowUps = [
-            "Would you like me to suggest recipes with these items?",
-            "Do you have any dietary preferences I should know about?",
-            "Are you looking for specific health benefits from your foods?",
-            "Would you like to know about our current regional specialties?"
-          ];
-          
+      if (chatResponse.suggestions && chatResponse.suggestions.length > 0) {
+        setTimeout(() => {
           const followUp: ChatMessage = {
             id: (Date.now() + 2).toString(),
-            content: suggestedFollowUps[Math.floor(Math.random() * suggestedFollowUps.length)],
+            content: chatResponse.suggestions![Math.floor(Math.random() * chatResponse.suggestions!.length)],
             isUser: false,
             timestamp: new Date(),
           };
           
           setMessages(prev => [...prev, followUp]);
-        }
-      }, 1500);
-    }, 1200);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error in chat handling:", error);
+      
+      const errorResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setIsTyping(false);
+      setMessages(prev => [...prev, errorResponse]);
+      
+      toast({
+        title: "Connection Error",
+        description: "Could not connect to the chat service.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleChat = () => {

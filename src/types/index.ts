@@ -41,3 +41,8 @@ export interface FoodKnowledge {
   ripening?: string;
   cooking?: string;
 }
+
+export interface ChatApiResponse {
+  message: string;
+  suggestions?: string[];
+}
