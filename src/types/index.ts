@@ -30,6 +30,13 @@ export interface ChatMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  suggestions?: QuestionSuggestion[];
+}
+
+export interface QuestionSuggestion {
+  id: string;
+  text: string;
+  icon?: string;
 }
 
 export interface FoodKnowledge {

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bot, MessageCircle, Send, X } from "lucide-react";
+import { Bot, MessageCircle, Send, X, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { ChatMessage, CartItem, ChatApiResponse, FoodKnowledge } from "@/types";
+import { ChatMessage, CartItem, ChatApiResponse, FoodKnowledge, QuestionSuggestion } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatBotProps {
@@ -26,6 +26,7 @@ interface ConversationContext {
   interactionCount: number;
   lastSuggestion?: Date;
   hasAskedFollowUp: boolean;
+  recentQuestions: Set<string>;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
@@ -37,6 +38,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       content: "Hello! I'm your CartSmart AI assistant. How can I help with your shopping today?",
       isUser: false,
       timestamp: new Date(),
+      suggestions: [
+        { id: "s1", text: "Tell me about seasonal produce", icon: "help-circle" },
+        { id: "s2", text: "What deals are available?", icon: "question-mark-circle" },
+        { id: "s3", text: "Recommend a healthy breakfast", icon: "help-circle" }
+      ]
     },
   ]);
   const [isTyping, setIsTyping] = useState(false);
@@ -50,7 +56,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     askedAbout: new Set<string>(),
     userPreferences: {},
     interactionCount: 0,
-    hasAskedFollowUp: false
+    hasAskedFollowUp: false,
+    recentQuestions: new Set<string>()
   });
 
   const foodKnowledge: ContextualKnowledge = {
@@ -244,6 +251,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         !prevContext.userPreferences.dietaryPreferences?.includes(pref)
       );
       
+      const recentQuestions = new Set(prevContext.recentQuestions);
+      recentQuestions.add(userMessage.toLowerCase());
+      
+      if (recentQuestions.size > 5) {
+        const oldestQuestion = Array.from(recentQuestions)[0];
+        recentQuestions.delete(oldestQuestion);
+      }
+      
       return {
         lastTopic,
         mentionedFoods: [...prevContext.mentionedFoods, ...newMentionedFoods],
@@ -257,7 +272,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         },
         interactionCount: prevContext.interactionCount + 1,
         lastSuggestion: new Date(),
-        hasAskedFollowUp: responseContent.includes("?")
+        hasAskedFollowUp: responseContent.includes("?"),
+        recentQuestions
       };
     });
   };
@@ -281,13 +297,84 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       
       return {
         message: localResponse,
-        suggestions: [
-          "Tell me about seasonal produce",
-          "What deals are available?",
-          "Recommend a healthy breakfast"
-        ]
+        suggestions: generateSuggestions(userMessage, localResponse)
       };
     }
+  };
+
+  const generateSuggestions = (userMessage: string, botResponse: string): string[] => {
+    const userMessageLower = userMessage.toLowerCase();
+    const botResponseLower = botResponse.toLowerCase();
+    const suggestions: string[] = [];
+    
+    const addSuggestion = (suggestion: string) => {
+      if (
+        !conversationContext.recentQuestions.has(suggestion.toLowerCase()) &&
+        !suggestions.some(s => s.toLowerCase() === suggestion.toLowerCase()) &&
+        suggestions.length < 3
+      ) {
+        suggestions.push(suggestion);
+      }
+    };
+    
+    const matchedFood = findMatchingFood(userMessageLower);
+    if (matchedFood) {
+      if (!botResponseLower.includes("taste") && !userMessageLower.includes("taste")) {
+        addSuggestion(`How does ${matchedFood} taste?`);
+      }
+      if (!botResponseLower.includes("health") && !botResponseLower.includes("benefit") && 
+          !userMessageLower.includes("health") && !userMessageLower.includes("benefit")) {
+        addSuggestion(`What are the health benefits of ${matchedFood}?`);
+      }
+      if (!botResponseLower.includes("store") && !userMessageLower.includes("store")) {
+        addSuggestion(`How should I store ${matchedFood}?`);
+      }
+      if (!botResponseLower.includes("recipe") && !userMessageLower.includes("recipe")) {
+        addSuggestion(`What can I make with ${matchedFood}?`);
+      }
+    }
+    
+    if (conversationContext.lastTopic) {
+      switch (conversationContext.lastTopic) {
+        case 'recipes':
+          addSuggestion("Do you have any quick meal ideas?");
+          addSuggestion("What's a good vegetarian dinner option?");
+          break;
+        case 'deals':
+        case 'offers':
+        case 'discounts':
+          addSuggestion("What's the best deal this week?");
+          addSuggestion("Are there any discounts on organic products?");
+          break;
+        case 'health benefits':
+          addSuggestion("What foods help with energy levels?");
+          addSuggestion("Which fruits have the most antioxidants?");
+          break;
+        case 'seasonality':
+          addSuggestion("What's in season right now?");
+          addSuggestion("When will mangoes be in season?");
+          break;
+      }
+    }
+    
+    const generalSuggestions = [
+      "What deals are available this week?",
+      "Tell me about seasonal produce",
+      "Can you recommend a healthy breakfast?",
+      "What's popular in the store right now?",
+      "What's good for a quick dinner?",
+      "Do you have meal prep ideas?",
+      "What are your freshest items today?",
+      "Are there any new products?"
+    ];
+    
+    while (suggestions.length < 3) {
+      const randomSuggestion = generalSuggestions[Math.floor(Math.random() * generalSuggestions.length)];
+      addSuggestion(randomSuggestion);
+      if (suggestions.length === generalSuggestions.length) break;
+    }
+    
+    return suggestions;
   };
 
   const generateBotResponse = (userMessage: string): string => {
@@ -460,6 +547,15 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
   };
 
+  const handleSuggestionClick = (suggestionText: string) => {
+    if (!isTyping) {
+      setMessage(suggestionText);
+      handleSubmit({
+        preventDefault: () => {},
+      } as React.FormEvent);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -486,37 +582,29 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       
       await new Promise(resolve => setTimeout(resolve, typingDelay));
       
+      let suggestions: QuestionSuggestion[] = [];
+      
+      if (chatResponse.suggestions && chatResponse.suggestions.length > 0) {
+        const suggestionIcons = ["help-circle", "question-mark-circle", "message-circle"];
+        
+        suggestions = chatResponse.suggestions.map((text, index) => ({
+          id: `sugg-${Date.now()}-${index}`,
+          text,
+          icon: suggestionIcons[index % suggestionIcons.length]
+        }));
+      }
+      
       const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: chatResponse.message,
         isUser: false,
         timestamp: new Date(),
+        suggestions: suggestions.length > 0 ? suggestions : undefined
       };
       
       setIsTyping(false);
       setMessages(prev => [...prev, botResponse]);
       
-      if (chatResponse.suggestions && 
-          chatResponse.suggestions.length > 0 && 
-          !chatResponse.message.includes("?")) {
-        
-        setTimeout(() => {
-          const useApiSuggestion = Math.random() > 0.3;
-          
-          const followUpContent = useApiSuggestion 
-            ? chatResponse.suggestions![Math.floor(Math.random() * chatResponse.suggestions!.length)]
-            : getRandomItem(casualPhrases.personalQuestions);
-          
-          const followUp: ChatMessage = {
-            id: (Date.now() + 2).toString(),
-            content: followUpContent,
-            isUser: false,
-            timestamp: new Date(),
-          };
-          
-          setMessages(prev => [...prev, followUp]);
-        }, 5000 + Math.random() * 2000);
-      }
     } catch (error) {
       console.error("Error in chat handling:", error);
       
@@ -571,27 +659,46 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
           <ScrollArea className="flex-grow p-4 h-80">
             <div className="space-y-4">
               {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.isUser ? "justify-end" : "justify-start"
-                  }`}
-                >
+                <div key={msg.id} className="space-y-2">
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      msg.isUser
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                    className={`flex ${
+                      msg.isUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-line">{msg.content}</p>
-                    <span className="text-xs opacity-70 block mt-1">
-                      {msg.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                    <div
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        msg.isUser
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-line">{msg.content}</p>
+                      <span className="text-xs opacity-70 block mt-1">
+                        {msg.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {!msg.isUser && msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 ml-2 mt-2">
+                      {msg.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.id}
+                          onClick={() => handleSuggestionClick(suggestion.text)}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-secondary/50 hover:bg-secondary/70 rounded-full text-xs transition-colors"
+                          disabled={isTyping}
+                        >
+                          {suggestion.icon && (
+                            <HelpCircle className="w-3 h-3" />
+                          )}
+                          {suggestion.text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               
