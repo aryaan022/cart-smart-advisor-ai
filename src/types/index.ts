@@ -31,3 +31,13 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
 }
+
+export interface FoodKnowledge {
+  taste: string;
+  benefits: string;
+  pairings: string;
+  seasonality?: string;
+  storage?: string;
+  ripening?: string;
+  cooking?: string;
+}

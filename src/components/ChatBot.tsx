@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, MessageCircle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,8 @@ interface ContextualKnowledge {
     pairings: string;
     seasonality?: string;
     storage?: string;
+    ripening?: string;
+    cooking?: string;
   };
 }
 
@@ -38,7 +39,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Food knowledge base for contextual responses
   const foodKnowledge: ContextualKnowledge = {
     "apple": {
       taste: "Our organic apples are crisp and juicy with a perfect balance of sweetness and tartness. The Himalayan varieties we carry have a particularly rich flavor profile.",
@@ -82,7 +82,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
   };
 
-  // Regional food deals and specials
   const currentDeals = [
     {
       title: "Festive Season Special",
@@ -106,7 +105,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
   ];
 
-  // Regional recipe suggestions
   const regionalRecipes = {
     breakfast: [
       "Masala Dosa with Coconut Chutney using our organic potatoes and fresh coconut",
@@ -157,10 +155,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
   const generateBotResponse = (userMessage: string): string => {
     const userMessageLower = userMessage.toLowerCase();
     
-    // Check for context about specific foods first
     const matchedFood = findMatchingFood(userMessageLower);
     
-    // Handle specific food inquiries
     if (matchedFood) {
       if (userMessageLower.includes("taste") || userMessageLower.includes("flavor")) {
         return foodKnowledge[matchedFood].taste;
@@ -171,12 +167,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       } else if (userMessageLower.includes("store") || userMessageLower.includes("keep")) {
         return foodKnowledge[matchedFood].storage || `${matchedFood.charAt(0).toUpperCase() + matchedFood.slice(1)} is best stored in a cool, dry place. If you need specific storage instructions, just ask!`;
       } else {
-        // Generic food response if no specific attribute is asked
         return `${foodKnowledge[matchedFood].taste} ${foodKnowledge[matchedFood].benefits} Would you like to know about pairing suggestions or how to properly store it?`;
       }
     }
     
-    // Recipe and meal suggestions
     if (userMessageLower.includes("recipe") || userMessageLower.includes("meal") || userMessageLower.includes("cook") || userMessageLower.includes("make")) {
       let mealTime: keyof typeof regionalRecipes = "breakfast";
       
@@ -190,11 +184,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         mealTime = "snacks";
       }
       
-      // Personalize based on cart
       if (cartItems.length > 0) {
         const cartItemNames = cartItems.map(item => item.name.toLowerCase());
         
-        // Check if any cart items are mentioned in recipes
         const relevantRecipes = regionalRecipes[mealTime].filter(recipe => 
           cartItemNames.some(item => recipe.toLowerCase().includes(item))
         );
@@ -203,24 +195,20 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
           return `Based on your cart items, here's a perfect ${mealTime} recipe for you: ${relevantRecipes[0]}. Would you like more details on how to prepare it?`;
         }
         
-        // If no specific matches, suggest recipes and recommend additional items
         return `Here's a delicious ${mealTime} idea: ${regionalRecipes[mealTime][0]}. I notice you might need a few ingredients for this recipe. Would you like me to suggest what to add to your cart?`;
       } else {
-        // Generic recipe suggestion if cart is empty
         return `For a nutritious ${mealTime}, I recommend: ${regionalRecipes[mealTime].join(", or ")}. Would you like me to suggest ingredients to add to your cart for any of these recipes?`;
       }
     }
     
-    // Deal and recommendation queries
-    else if (userMessageLower.includes("deal") || userMessageLower.includes("offer") || userMessageLower.includes("discount") || userMessageLower.includes("save") || userMessageLower.includes("sale")) {
+    if (userMessageLower.includes("deal") || userMessageLower.includes("offer") || userMessageLower.includes("discount") || userMessageLower.includes("save") || userMessageLower.includes("sale")) {
       const randomDeal = currentDeals[Math.floor(Math.random() * currentDeals.length)];
       const otherDeals = currentDeals.filter(deal => deal.title !== randomDeal.title).map(deal => deal.title);
       
       return `${randomDeal.title}: ${randomDeal.description} (${randomDeal.savings})\n\nWe also have these ongoing deals:\n• ${otherDeals.join("\n• ")}\n\nWould you like more details on any of these offers?`;
     }
     
-    // Food recommendation queries
-    else if (userMessageLower.includes("recommend") || userMessageLower.includes("suggest") || userMessageLower.includes("what should i eat") || userMessageLower.includes("what can i eat")) {
+    if (userMessageLower.includes("recommend") || userMessageLower.includes("suggest") || userMessageLower.includes("what should i eat") || userMessageLower.includes("what can i eat")) {
       if (userMessageLower.includes("breakfast")) {
         return "For a nutritious Indian breakfast, I recommend our organic eggs for making egg bhurji or try our whole grain bread with avocado and chaat masala. Our Greek yogurt with fresh fruits and a drizzle of local honey is also a customer favorite!";
       } else if (userMessageLower.includes("lunch") || userMessageLower.includes("dinner")) {
@@ -228,7 +216,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       } else if (userMessageLower.includes("snack") || userMessageLower.includes("quick")) {
         return "For a quick and healthy Indian-inspired snack, try our Greek yogurt with a sprinkle of chaat masala, or our fresh avocados mashed on whole grain toast with a dash of turmeric and black pepper. The ripe bananas with almond butter also make a satisfying and nutritious snack!";
       } else if (cartItems.length > 0) {
-        // Personalized recommendations based on cart
         const categories = new Set(cartItems.map(item => item.category));
         if (categories.has("Produce")) {
           return "Based on your cart, I see you enjoy fresh produce! Our organic sweet potatoes would go perfectly with your selections - they're grown in the richest soil in Karnataka and have an exceptional sweet flavor when roasted with a little bit of ghee and jeera.";
@@ -244,16 +231,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       }
     }
     
-    // Health and dietary questions
-    else if (userMessageLower.includes("healthy") || userMessageLower.includes("nutrition") || userMessageLower.includes("diet")) {
+    if (userMessageLower.includes("healthy") || userMessageLower.includes("nutrition") || userMessageLower.includes("diet")) {
       return "For healthy eating with an Indian palate, I recommend our organic produce section for fresh vegetables to make nutrient-rich sabzis. Our millets and whole grains like ragi and brown rice are excellent alternatives to refined carbs. If you're focusing on protein, our Greek yogurt has 2X the protein of regular dahi, and our free-range eggs are from hens raised without antibiotics. Would you like specific recommendations based on your dietary preferences?";
     }
     
-    // Default responses
-    else if (userMessageLower.includes("help") || userMessageLower.includes("how")) {
+    if (userMessageLower.includes("help") || userMessageLower.includes("how")) {
       return "I can help you find products, explain the taste and nutritional benefits of foods, suggest regional recipes, find local deals, and answer questions about our services. Just ask me anything about our products or how to use them in traditional or fusion recipes!";
     } 
-    // Cart specific questions
     else if (userMessageLower.includes("cart") || userMessageLower.includes("basket")) {
       if (cartItems.length === 0) {
         return "Your cart is currently empty. Would you like me to recommend some seasonal specialties or weekly deals to get you started?";
@@ -263,7 +247,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         return `You have ${itemCount} ${itemCount === 1 ? 'item' : 'items'} in your cart totaling ₹${totalAmount}. Based on your selections, you might enjoy adding some complementary items. Would you like suggestions?`;
       }
     }
-    // Questions about the store or service
     else if (userMessageLower.includes("store") || userMessageLower.includes("delivery") || userMessageLower.includes("pickup")) {
       return "Our stores are open from 7 AM to 10 PM daily. We offer free delivery for orders above ₹500 within a 10km radius, and our express delivery gets your groceries to you within 2 hours. For pickup orders, we have dedicated parking spaces - just notify us 30 minutes before arrival so we can have everything ready!";
     }
@@ -277,7 +260,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     
     if (!message.trim()) return;
     
-    // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       content: message,
@@ -288,10 +270,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     setMessages(prev => [...prev, userMessage]);
     setMessage("");
     
-    // Show typing indicator
     setIsTyping(true);
     
-    // Simulate typing delay before bot responds
     setTimeout(() => {
       const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -303,9 +283,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       setIsTyping(false);
       setMessages(prev => [...prev, botResponse]);
       
-      // Suggest follow-up questions if appropriate
       setTimeout(() => {
-        // Only add follow-up suggestions occasionally
         if (Math.random() > 0.5) {
           const suggestedFollowUps = [
             "Would you like me to suggest recipes with these items?",
@@ -314,7 +292,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
             "Would you like to know about our current regional specialties?"
           ];
           
-          // Randomly select one follow-up question
           const followUp: ChatMessage = {
             id: (Date.now() + 2).toString(),
             content: suggestedFollowUps[Math.floor(Math.random() * suggestedFollowUps.length)],
@@ -340,7 +317,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
 
   return (
     <>
-      {/* Chat button */}
       <Button
         onClick={toggleChat}
         className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg"
@@ -349,7 +325,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </Button>
       
-      {/* Chat dialog */}
       {isOpen && (
         <div className="fixed bottom-20 right-4 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50 flex flex-col">
           <div className="flex items-center gap-2 p-3 border-b bg-primary/5">
