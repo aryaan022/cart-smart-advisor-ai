@@ -24,6 +24,8 @@ interface ConversationContext {
     dislikedFoods?: string[];
   };
   interactionCount: number;
+  lastSuggestion?: Date;
+  hasAskedFollowUp: boolean;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
@@ -47,7 +49,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     mentionedFoods: [],
     askedAbout: new Set<string>(),
     userPreferences: {},
-    interactionCount: 0
+    interactionCount: 0,
+    hasAskedFollowUp: false
   });
 
   const foodKnowledge: ContextualKnowledge = {
@@ -252,7 +255,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
             ...dietaryPreferences
           ]
         },
-        interactionCount: prevContext.interactionCount + 1
+        interactionCount: prevContext.interactionCount + 1,
+        lastSuggestion: new Date(),
+        hasAskedFollowUp: responseContent.includes("?")
       };
     });
   };
@@ -297,9 +302,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       greeting = getRandomItem(casualPhrases.thinking);
     }
     
+    const shouldAskFollowUp = !conversationContext.hasAskedFollowUp;
+    
     if (matchedFood) {
       if (userMessageLower.includes("taste") || userMessageLower.includes("flavor")) {
-        return `${greeting}${foodKnowledge[matchedFood].taste} Have you tried it before? Many of our customers say it's exceptional compared to what they find elsewhere.`;
+        return `${greeting}${foodKnowledge[matchedFood].taste}${shouldAskFollowUp ? " Have you tried it before? Many of our customers say it's exceptional compared to what they find elsewhere." : ""}`;
       } else if (userMessageLower.includes("health") || userMessageLower.includes("benefit")) {
         return `${greeting}${foodKnowledge[matchedFood].benefits} I've heard from many customers that they notice a real difference when switching to our quality products. Is that something you're particularly interested in?`;
       } else if (userMessageLower.includes("pair") || userMessageLower.includes("combine") || userMessageLower.includes("with")) {
@@ -308,14 +315,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         const storageInfo = foodKnowledge[matchedFood].storage || `${matchedFood.charAt(0).toUpperCase() + matchedFood.slice(1)} is best stored in a cool, dry place. If you need specific storage instructions, just ask!`;
         return `${greeting}${storageInfo} Do you find storage space is often a challenge? I have some creative solutions that work well for many of our customers.`;
       } else {
-        const randomQuestion = getRandomItem([
-          `Would you like to know about pairing suggestions or how to properly store it?`,
-          `Are you planning to use it in a specific recipe?`,
-          `Have you tried our organic version? Many customers notice a significant difference in quality.`,
-          `Is this something you buy regularly?`
-        ]);
-        
-        return `${greeting}${foodKnowledge[matchedFood].taste} ${foodKnowledge[matchedFood].benefits} ${randomQuestion}`;
+        const randomInfo = `${greeting}${foodKnowledge[matchedFood].taste} ${foodKnowledge[matchedFood].benefits}`;
+        return shouldAskFollowUp ? `${randomInfo} Would you like to know more about how to use or store it?` : randomInfo;
       }
     }
     
@@ -495,7 +496,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       setIsTyping(false);
       setMessages(prev => [...prev, botResponse]);
       
-      if (chatResponse.suggestions && chatResponse.suggestions.length > 0) {
+      if (chatResponse.suggestions && 
+          chatResponse.suggestions.length > 0 && 
+          !chatResponse.message.includes("?")) {
+        
         setTimeout(() => {
           const useApiSuggestion = Math.random() > 0.3;
           
@@ -511,7 +515,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
           };
           
           setMessages(prev => [...prev, followUp]);
-        }, 2500);
+        }, 5000 + Math.random() * 2000);
       }
     } catch (error) {
       console.error("Error in chat handling:", error);
