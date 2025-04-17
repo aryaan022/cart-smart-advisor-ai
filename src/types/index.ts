@@ -53,3 +53,43 @@ export interface ChatApiResponse {
   message: string;
   suggestions?: string[];
 }
+
+export interface GeminiApiRequest {
+  contents: GeminiContent[];
+  generationConfig?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+  };
+}
+
+export interface GeminiContent {
+  role: string;
+  parts: {
+    text: string;
+  }[];
+}
+
+export interface GeminiApiResponse {
+  candidates: {
+    content: {
+      parts: {
+        text: string;
+      }[];
+    };
+  }[];
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  prepTime: string;
+  cookTime: string;
+  servings: number;
+  difficulty: string;
+  relatedProducts: string[];
+}

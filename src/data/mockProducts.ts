@@ -1,7 +1,7 @@
+import { Product } from "@/types";
+import { additionalProducts } from "./additionalProducts";
 
-import { Product } from "../types";
-
-export const mockProducts: Product[] = [
+const originalProducts: Product[] = [
   {
     id: "1",
     name: "Organic Apples",
@@ -159,3 +159,5 @@ export const mockProducts: Product[] = [
     currency: "₹"
   }
 ];
+
+export const mockProducts: Product[] = [...originalProducts, ...additionalProducts];

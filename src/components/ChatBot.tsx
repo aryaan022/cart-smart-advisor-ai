@@ -5,6 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, CartItem, ChatApiResponse, FoodKnowledge, QuestionSuggestion } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { queryGeminiApi, generateSuggestionsWithGemini } from "@/services/geminiService";
+import { getRecentMessages, calculateTypingDelay } from "@/utils/chatUtils";
 
 interface ChatBotProps {
   cartItems: CartItem[];
@@ -49,7 +51,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [apiUrl, setApiUrl] = useState<string>("");
   
   const [conversationContext, setConversationContext] = useState<ConversationContext>({
     mentionedFoods: [],
@@ -201,10 +202,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    setApiUrl("https://api.openai.com/v1/chat/completions");
-  }, []);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -280,17 +277,18 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
 
   const fetchChatbotResponse = async (userMessage: string): Promise<ChatApiResponse> => {
     try {
-      const payload = {
-        message: userMessage,
-        cartItems: cartItems,
+      const recentMessages = getRecentMessages(messages);
+      
+      const response = await queryGeminiApi(userMessage, cartItems, recentMessages);
+      
+      const suggestions = await generateSuggestionsWithGemini(userMessage, response, cartItems);
+      
+      return {
+        message: response,
+        suggestions: suggestions
       };
-
-      console.log("Sending request to chatbot API:", payload);
-
-      throw new Error("API call simulated failure for demo purposes");
-
     } catch (error) {
-      console.log("Error fetching chatbot response from API:", error);
+      console.log("Error fetching chatbot response from Gemini API:", error);
       console.log("Falling back to local processing...");
       
       const localResponse = generateBotResponse(userMessage);
@@ -576,7 +574,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     try {
       const chatResponse = await fetchChatbotResponse(userMessage.content);
       
-      const typingDelay = Math.min(700 + chatResponse.message.length * 10, 3000);
+      const typingDelay = calculateTypingDelay(chatResponse.message);
       
       updateConversationContext(userMessage.content, chatResponse.message);
       
