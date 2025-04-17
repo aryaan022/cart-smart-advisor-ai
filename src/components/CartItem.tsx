@@ -23,8 +23,11 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
     onUpdateQuantity(item.id, item.quantity + 1);
   };
 
-  const currencySymbol = item.currency || "₹";
+  const currencySymbol = "₹"; // Fixed to use Indian Rupee symbol consistently
   const [imageError, setImageError] = React.useState(false);
+
+  // Generate a fallback image URL based on item name
+  const fallbackImageUrl = `https://source.unsplash.com/300x300/?${encodeURIComponent(item.name.split(' ')[0])},food`;
 
   return (
     <div className="flex items-center py-3 border-b last:border-0">
@@ -37,9 +40,19 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full w-full">
-            <ImageIcon className="h-6 w-6 text-muted-foreground opacity-40" />
-          </div>
+          <img
+            src={fallbackImageUrl}
+            alt={item.name}
+            className="h-full w-full object-cover"
+            onError={() => {
+              // If fallback image also fails, show icon
+              return (
+                <div className="flex flex-col items-center justify-center h-full w-full">
+                  <ImageIcon className="h-6 w-6 text-muted-foreground opacity-40" />
+                </div>
+              );
+            }}
+          />
         )}
       </div>
       

@@ -1,6 +1,8 @@
+
 import { GeminiApiRequest, GeminiApiResponse, CartItem } from "@/types";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+// Updated to use gemini-2.0-flash model as shown in the documentation
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 const GEMINI_API_KEY = "AIzaSyAkFMx4CsavFvvpABCmIuUOUB3Irn8YjyY";
 
 export const queryGeminiApi = async (
@@ -29,7 +31,12 @@ export const queryGeminiApi = async (
     
     Respond in a conversational, helpful tone like ChatGPT. If the user asks about taste or 
     information about a food item, provide rich details about flavor profiles, texture, and culinary uses.
-    Personalize your responses and ask follow-up questions to engage the user.`;
+    Personalize your responses and ask follow-up questions to engage the user. 
+    
+    Be sure to respond naturally to any question, even if it's not directly about food. If the user asks
+    about price optimization, cheaper alternatives, or recommendations based on their cart, provide helpful
+    suggestions. Respond to natural language queries like "Tell me about this food" or "How does this taste"
+    with detailed information.`;
     
     // Create the Gemini API request
     const requestData: GeminiApiRequest = {
