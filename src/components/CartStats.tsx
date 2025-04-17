@@ -20,6 +20,9 @@ const CartStats: React.FC<CartStatsProps> = ({ cartItems, potentialSavings }) =>
   const currentSavings = originalTotal - subtotal;
   const totalPotentialSavings = currentSavings + potentialSavings;
   const storeCount = new Set(cartItems.map(item => item.store)).size;
+  
+  // Use the ₹ symbol consistently
+  const currencySymbol = "₹";
 
   return (
     <Card>
@@ -38,11 +41,11 @@ const CartStats: React.FC<CartStatsProps> = ({ cartItems, potentialSavings }) =>
           </div>
           <div className="flex justify-between text-sm">
             <span>Original Price:</span>
-            <span>${originalTotal.toFixed(2)}</span>
+            <span>{currencySymbol}{originalTotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm font-medium">
             <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{currencySymbol}{subtotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -55,7 +58,7 @@ const CartStats: React.FC<CartStatsProps> = ({ cartItems, potentialSavings }) =>
               Current Savings:
             </span>
             <span className="font-bold text-primary">
-              ${currentSavings.toFixed(2)}
+              {currencySymbol}{currentSavings.toFixed(2)}
             </span>
           </div>
           
@@ -66,7 +69,7 @@ const CartStats: React.FC<CartStatsProps> = ({ cartItems, potentialSavings }) =>
                 Additional Potential Savings:
               </span>
               <span className="font-bold text-accent">
-                ${potentialSavings.toFixed(2)}
+                {currencySymbol}{potentialSavings.toFixed(2)}
               </span>
             </div>
           )}
@@ -74,7 +77,7 @@ const CartStats: React.FC<CartStatsProps> = ({ cartItems, potentialSavings }) =>
           <div className="mt-2 pt-2 border-t border-dashed flex justify-between items-center">
             <span className="font-medium">Total Possible Savings:</span>
             <span className="text-lg font-bold">
-              ${totalPotentialSavings.toFixed(2)}
+              {currencySymbol}{totalPotentialSavings.toFixed(2)}
             </span>
           </div>
         </div>

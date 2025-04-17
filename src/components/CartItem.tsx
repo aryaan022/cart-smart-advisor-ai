@@ -2,7 +2,7 @@
 import React from 'react';
 import { CartItem as CartItemType } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ImageIcon } from 'lucide-react';
 
 interface CartItemProps {
   item: CartItemType;
@@ -24,18 +24,23 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
   };
 
   const currencySymbol = item.currency || "₹";
+  const [imageError, setImageError] = React.useState(false);
 
   return (
     <div className="flex items-center py-3 border-b last:border-0">
-      <div className="h-16 w-16 bg-muted mr-3 rounded-md overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = "/placeholder.svg";
-          }}
-        />
+      <div className="h-16 w-16 bg-muted mr-3 rounded-md overflow-hidden flex items-center justify-center">
+        {!imageError ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            className="h-full w-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full w-full">
+            <ImageIcon className="h-6 w-6 text-muted-foreground opacity-40" />
+          </div>
+        )}
       </div>
       
       <div className="flex-1">

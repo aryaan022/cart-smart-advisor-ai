@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, ImageIcon } from "lucide-react";
 import { Product } from "@/types";
 import { Badge } from "@/components/ui/badge";
 
@@ -18,18 +18,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isInCart, onAddToCar
     : 0;
   
   const currencySymbol = product.currency || "₹";
+  const [imageError, setImageError] = React.useState(false);
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
-      <div className="relative h-48 bg-muted">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = "/placeholder.svg";
-          }}
-        />
+      <div className="relative h-48 bg-muted flex items-center justify-center">
+        {!imageError ? (
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="h-full w-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full w-full bg-muted">
+            <ImageIcon className="h-12 w-12 text-muted-foreground opacity-40" />
+            <span className="text-xs text-muted-foreground mt-2">{product.name}</span>
+          </div>
+        )}
         {discountPercent > 0 && (
           <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
             {discountPercent}% OFF

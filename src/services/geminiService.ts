@@ -1,7 +1,6 @@
-
 import { GeminiApiRequest, GeminiApiResponse, CartItem } from "@/types";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
 const GEMINI_API_KEY = "AIzaSyAkFMx4CsavFvvpABCmIuUOUB3Irn8YjyY";
 
 export const queryGeminiApi = async (
@@ -161,7 +160,6 @@ export const generateSuggestionsWithGemini = async (
   }
 };
 
-// New function for price optimization suggestions
 export const getPriceOptimizationSuggestions = (
   currentProduct: CartItem | null,
   allProducts: CartItem[]
@@ -178,7 +176,6 @@ export const getPriceOptimizationSuggestions = (
   return cheaperAlternatives;
 };
 
-// Get bundle recommendations based on complementary products
 export const getBundleRecommendations = (
   currentProduct: CartItem | null,
   allProducts: CartItem[]
@@ -216,4 +213,3 @@ export const getBundleRecommendations = (
   
   return { bundleItems, savings };
 };
-
