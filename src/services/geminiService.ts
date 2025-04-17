@@ -1,7 +1,7 @@
 
 import { GeminiApiRequest, GeminiApiResponse, CartItem } from "@/types";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
 const GEMINI_API_KEY = "AIzaSyAkFMx4CsavFvvpABCmIuUOUB3Irn8YjyY";
 
 export const queryGeminiApi = async (
@@ -160,3 +160,60 @@ export const generateSuggestionsWithGemini = async (
     return ["Tell me more about these products", "What recipes can I make?", "How should I store these items?"];
   }
 };
+
+// New function for price optimization suggestions
+export const getPriceOptimizationSuggestions = (
+  currentProduct: CartItem | null,
+  allProducts: CartItem[]
+): CartItem[] => {
+  if (!currentProduct) return [];
+  
+  // Find cheaper alternatives in the same category
+  const cheaperAlternatives = allProducts.filter(product => 
+    product.id !== currentProduct.id && 
+    product.category === currentProduct.category && 
+    product.price < currentProduct.price
+  ).sort((a, b) => a.price - b.price).slice(0, 3);
+  
+  return cheaperAlternatives;
+};
+
+// Get bundle recommendations based on complementary products
+export const getBundleRecommendations = (
+  currentProduct: CartItem | null,
+  allProducts: CartItem[]
+): { bundleItems: CartItem[], savings: number } => {
+  if (!currentProduct) return { bundleItems: [], savings: 0 };
+  
+  // Simple bundling logic based on categories that go well together
+  const complementaryCategories: Record<string, string[]> = {
+    "Produce": ["Pantry", "Dairy"],
+    "Bakery": ["Dairy", "Pantry"],
+    "Dairy": ["Bakery", "Produce"],
+    "Meat": ["Produce", "Pantry"],
+    "Seafood": ["Produce", "Pantry"],
+    "Pantry": ["Produce", "Dairy", "Meat", "Seafood"]
+  };
+  
+  const currentCategory = currentProduct.category;
+  const compatibleCategories = complementaryCategories[currentCategory] || [];
+  
+  const bundleItems = allProducts
+    .filter(product => 
+      product.id !== currentProduct.id && 
+      compatibleCategories.includes(product.category)
+    )
+    .sort(() => 0.5 - Math.random()) // Shuffle
+    .slice(0, 2);
+  
+  // Add the current product to the bundle
+  bundleItems.unshift({...currentProduct, quantity: 1});
+  
+  // Calculate potential savings (10-15% off the total)
+  const totalPrice = bundleItems.reduce((sum, item) => sum + item.price, 0);
+  const savingsPercent = 10 + Math.floor(Math.random() * 6); // Random between 10-15%
+  const savings = Math.floor(totalPrice * (savingsPercent / 100));
+  
+  return { bundleItems, savings };
+};
+

@@ -18,6 +18,19 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
 
   const recommendations: Recommendation[] = [];
   
+  if (cartItems.length === 0) {
+    return recommendations;
+  }
+  
+  // Extract product IDs and categories from cart items
+  const cartProductIds = cartItems.map(item => item.id);
+  const cartProductCategories = new Set(
+    cartItems.map(item => {
+      const product = mockProducts.find(p => p.id === item.id);
+      return product ? product.category : null;
+    }).filter(Boolean)
+  );
+  
   // Check if we have eggs and milk in the cart
   const hasEggs = cartItems.some(item => item.id === "4");
   const hasMilk = cartItems.some(item => item.id === "3");
@@ -103,6 +116,96 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
     });
   }
   
+  // PRICE OPTIMIZATION RECOMMENDATIONS
+  
+  // Find expensive items in cart and suggest cheaper alternatives
+  const expensiveItems = cartItems.filter(item => {
+    const product = mockProducts.find(p => p.id === item.id);
+    return product && product.price > 300;
+  });
+  
+  if (expensiveItems.length > 0) {
+    // Get the most expensive item
+    const expensiveItem = expensiveItems.reduce((most, current) => {
+      const mostProduct = mockProducts.find(p => p.id === most.id);
+      const currentProduct = mockProducts.find(p => p.id === current.id);
+      if (!mostProduct || !currentProduct) return most;
+      return mostProduct.price > currentProduct.price ? most : current;
+    }, expensiveItems[0]);
+    
+    const expensiveProduct = mockProducts.find(p => p.id === expensiveItem.id);
+    if (expensiveProduct) {
+      // Find a cheaper alternative
+      const cheaperProducts = mockProducts.filter(p => 
+        p.id !== expensiveProduct.id && 
+        p.category === expensiveProduct.category && 
+        p.price < expensiveProduct.price
+      ).sort((a, b) => a.price - b.price);
+      
+      if (cheaperProducts.length > 0) {
+        const cheaperProduct = cheaperProducts[0];
+        const priceDifference = expensiveProduct.price - cheaperProduct.price;
+        
+        recommendations.push({
+          id: `rec-save-${expensiveProduct.id}`,
+          title: `Save ₹${priceDifference} on ${expensiveProduct.category}`,
+          description: `Switch to ${cheaperProduct.name} and save ₹${priceDifference} on your purchase.`,
+          savings: priceDifference,
+          items: [{...cheaperProduct, quantity: 1}]
+        });
+      }
+    }
+  }
+  
+  // Store-based bundle offers for multiple items from the same store
+  const storeGroups: {[key: string]: string[]} = {};
+  
+  cartItems.forEach(item => {
+    const product = mockProducts.find(p => p.id === item.id);
+    if (product) {
+      if (!storeGroups[product.store]) {
+        storeGroups[product.store] = [];
+      }
+      storeGroups[product.store].push(product.id);
+    }
+  });
+  
+  // For stores with multiple items, suggest additional items from the same store
+  for (const [store, productIds] of Object.entries(storeGroups)) {
+    if (productIds.length >= 2) {
+      const storeProducts = mockProducts.filter(p => 
+        p.store === store && 
+        !cartProductIds.includes(p.id)
+      );
+      
+      // Select 2 random products from the same store to add
+      const additionalProducts = storeProducts
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 2);
+      
+      if (additionalProducts.length > 0) {
+        const cartValue = productIds.reduce((sum, id) => {
+          const product = mockProducts.find(p => p.id === id);
+          return sum + (product?.price || 0);
+        }, 0);
+        
+        const additionalValue = additionalProducts.reduce((sum, product) => {
+          return sum + product.price;
+        }, 0);
+        
+        const savings = Math.floor((cartValue + additionalValue) * 0.15); // 15% bundle discount
+        
+        recommendations.push({
+          id: `rec-store-${store.replace(/\s+/g, '-')}`,
+          title: `${store} Bundle Offer`,
+          description: `Add these items to your ${store} products and save ₹${savings} with our bundle discount!`,
+          savings,
+          items: additionalProducts.map(p => ({...p, quantity: 1}))
+        });
+      }
+    }
+  }
+  
   // Generic recommendation for all carts
   recommendations.push({
     id: "rec4",
@@ -117,3 +220,28 @@ export const generateRecommendations = (cartItems: { id: string, quantity: numbe
   
   return recommendations;
 };
+
+// Get cheaper alternatives for a specific product
+export const getCheaperAlternatives = (productId: string): Recommendation | null => {
+  const product = mockProducts.find(p => p.id === productId);
+  if (!product) return null;
+  
+  const cheaperProducts = mockProducts.filter(p => 
+    p.id !== productId && 
+    p.category === product.category && 
+    p.price < product.price
+  ).sort((a, b) => a.price - b.price).slice(0, 2);
+  
+  if (cheaperProducts.length === 0) return null;
+  
+  const savings = product.price - cheaperProducts[0].price;
+  
+  return {
+    id: `cheaper-alt-${productId}`,
+    title: `Save ₹${savings} on ${product.name}`,
+    description: `Try these cheaper alternatives in the same category.`,
+    savings,
+    items: cheaperProducts.map(p => ({...p, quantity: 1}))
+  };
+};
+

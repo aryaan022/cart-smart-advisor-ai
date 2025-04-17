@@ -96,3 +96,13 @@ export interface Recipe {
   difficulty: string;
   relatedProducts: string[];
 }
+
+export interface PriceOptimization {
+  product: CartItem;
+  alternatives: CartItem[];
+  bundleOffers: {
+    items: CartItem[];
+    savings: number;
+  };
+}
+
