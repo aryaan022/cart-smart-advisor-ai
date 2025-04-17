@@ -26,7 +26,11 @@ export const queryGeminiApi = async (
     Focus on providing detailed information about products including recipes, cooking tips,
     health benefits, storage advice, and food pairings. Keep responses conversational and friendly.
     If asked about products not in the cart or not in our inventory, politely suggest alternatives we carry.
-    ${conversationContext}`;
+    ${conversationContext}
+    
+    Respond in a conversational, helpful tone like ChatGPT. If the user asks about taste or 
+    information about a food item, provide rich details about flavor profiles, texture, and culinary uses.
+    Personalize your responses and ask follow-up questions to engage the user.`;
     
     // Create the Gemini API request
     const requestData: GeminiApiRequest = {
@@ -41,12 +45,14 @@ export const queryGeminiApi = async (
         }
       ],
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.8,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 800
       }
     };
+
+    console.log("Sending request to Gemini API:", JSON.stringify(requestData));
 
     const response = await fetch(
       `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
@@ -59,11 +65,15 @@ export const queryGeminiApi = async (
       }
     );
 
+    console.log("Gemini API response status:", response.status);
+
     if (!response.ok) {
+      console.error("Gemini API error response:", await response.text());
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json() as GeminiApiResponse;
+    console.log("Gemini API response:", JSON.stringify(data));
     
     if (data.candidates && data.candidates.length > 0 && 
         data.candidates[0].content && 
@@ -121,6 +131,7 @@ export const generateSuggestionsWithGemini = async (
     );
 
     if (!response.ok) {
+      console.error("Gemini API error response for suggestions:", await response.text());
       throw new Error(`Gemini API error: ${response.status}`);
     }
 

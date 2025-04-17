@@ -277,18 +277,23 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
 
   const fetchChatbotResponse = async (userMessage: string): Promise<ChatApiResponse> => {
     try {
+      console.log("Fetching chatbot response for:", userMessage);
+      
       const recentMessages = getRecentMessages(messages);
+      console.log("Recent conversation context:", recentMessages);
       
       const response = await queryGeminiApi(userMessage, cartItems, recentMessages);
+      console.log("Got response from Gemini API:", response.substring(0, 100) + "...");
       
       const suggestions = await generateSuggestionsWithGemini(userMessage, response, cartItems);
+      console.log("Generated suggestions:", suggestions);
       
       return {
         message: response,
         suggestions: suggestions
       };
     } catch (error) {
-      console.log("Error fetching chatbot response from Gemini API:", error);
+      console.error("Error fetching chatbot response from Gemini API:", error);
       console.log("Falling back to local processing...");
       
       const localResponse = generateBotResponse(userMessage);
@@ -320,8 +325,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
       if (!botResponseLower.includes("taste") && !userMessageLower.includes("taste")) {
         addSuggestion(`How does ${matchedFood} taste?`);
       }
-      if (!botResponseLower.includes("health") && !botResponseLower.includes("benefit") && 
-          !userMessageLower.includes("health") && !userMessageLower.includes("benefit")) {
+      if (!botResponseLower.includes("health") && !userMessageLower.includes("health")) {
         addSuggestion(`What are the health benefits of ${matchedFood}?`);
       }
       if (!botResponseLower.includes("store") && !userMessageLower.includes("store")) {
@@ -388,10 +392,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
     
     const shouldAskFollowUp = !conversationContext.hasAskedFollowUp;
+    const personalTouch = getRandomItem([
+      "I personally love this item and use it regularly in my kitchen.",
+      "Many of our customers find this product exceptional compared to other stores.",
+      "This is one of our most popular items, especially during this season.",
+      "Our team carefully selects these items from the best sources."
+    ]);
     
     if (matchedFood) {
       if (userMessageLower.includes("taste") || userMessageLower.includes("flavor")) {
-        return `${greeting}${foodKnowledge[matchedFood].taste}${shouldAskFollowUp ? " Have you tried it before? Many of our customers say it's exceptional compared to what they find elsewhere." : ""}`;
+        return `${greeting}${foodKnowledge[matchedFood].taste} ${personalTouch} ${shouldAskFollowUp ? " Have you tried it before? Many of our customers say it's exceptional compared to what they find elsewhere." : ""}`;
       } else if (userMessageLower.includes("health") || userMessageLower.includes("benefit")) {
         return `${greeting}${foodKnowledge[matchedFood].benefits} I've heard from many customers that they notice a real difference when switching to our quality products. Is that something you're particularly interested in?`;
       } else if (userMessageLower.includes("pair") || userMessageLower.includes("combine") || userMessageLower.includes("with")) {
@@ -400,8 +410,29 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
         const storageInfo = foodKnowledge[matchedFood].storage || `${matchedFood.charAt(0).toUpperCase() + matchedFood.slice(1)} is best stored in a cool, dry place. If you need specific storage instructions, just ask!`;
         return `${greeting}${storageInfo} Do you find storage space is often a challenge? I have some creative solutions that work well for many of our customers.`;
       } else {
-        const randomInfo = `${greeting}${foodKnowledge[matchedFood].taste} ${foodKnowledge[matchedFood].benefits}`;
-        return shouldAskFollowUp ? `${randomInfo} Would you like to know more about how to use or store it?` : randomInfo;
+        let response = `${greeting}About ${matchedFood}:\n\n`;
+        response += foodKnowledge[matchedFood].taste + "\n\n";
+        response += foodKnowledge[matchedFood].benefits + "\n\n";
+        
+        if (foodKnowledge[matchedFood].pairings) {
+          response += `Pairs well with: ${foodKnowledge[matchedFood].pairings}\n\n`;
+        }
+        
+        if (foodKnowledge[matchedFood].storage) {
+          response += `Storage tip: ${foodKnowledge[matchedFood].storage}\n\n`;
+        }
+        
+        if (foodKnowledge[matchedFood].seasonality) {
+          response += `Seasonality: ${foodKnowledge[matchedFood].seasonality}\n\n`;
+        }
+        
+        if (foodKnowledge[matchedFood].cooking) {
+          response += `Cooking tip: ${foodKnowledge[matchedFood].cooking}\n\n`;
+        }
+        
+        response += `${personalTouch} Would you like me to suggest some recipes using ${matchedFood}?`;
+        
+        return response;
       }
     }
     
@@ -536,12 +567,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ cartItems }) => {
     }
     else if (userMessageLower.includes("hi") || userMessageLower.includes("hello") || userMessageLower.includes("hey") || userMessageLower.match(/^(good|morning|afternoon|evening)/)) {
       const timeBasedGreeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
-      return `${timeBasedGreeting}! It's great to chat with you today. I'm here to help with your shopping experience. Are you looking for something specific, or would you like some recommendations based on what's fresh and in season?`;
+      return `${timeBasedGreeting}! It's great to chat with you today. I'm here to help with your shopping experience. Are you looking for something specific, or would you like some recommendations based on what's fresh and in season? I can provide detailed information about our products including taste profiles, health benefits, and cooking ideas.`;
     }
     else {
       const randomQuestion = getRandomItem(casualPhrases.personalQuestions);
       
-      return `${greeting}I'm here to help with your shopping experience! I can tell you about food taste profiles, suggest recipes using Indian ingredients, recommend regional specialties, or inform you about our current deals and discounts. ${randomQuestion}`;
+      return `${greeting}I'm here to help with your shopping experience! I can tell you about food taste profiles, suggest recipes using Indian ingredients, recommend regional specialties, or inform you about our current deals and discounts. Ask me anything about our products - I can provide detailed information about their taste, nutritional benefits, storage tips, and more. ${randomQuestion}`;
     }
   };
 

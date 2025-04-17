@@ -47,6 +47,9 @@ export interface FoodKnowledge {
   storage?: string;
   ripening?: string;
   cooking?: string;
+  origin?: string;
+  varieties?: string;
+  culinaryUses?: string;
 }
 
 export interface ChatApiResponse {
